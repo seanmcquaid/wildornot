@@ -31,10 +31,45 @@ app.get("/", (req,res,next)=>{
     // res.send("sanity check");
     const animalQuery = "SELECT * FROM animals;";
     connection.query(animalQuery,(error,results)=>{
-        res.render("index", {animals: results});
-        console.log(results)
+        if(error){
+            throw error
+        }
+        // results is an array of all rows in animals
+        // grab a random one
+        const rand = Math.floor(Math.random() * results.length);
+        res.render("index", {animal: results[rand]});
+        // console.log(results)
     })
 })
 
-console.log("app is listening")
+
+
+// add a new route to handle the votes
+// ex /vote/wild/1
+app.get("/vote/:value/:id", (req,res,next)=>{
+    const value = req.params.value;
+    const id = req.params.id;
+    const insertQuery = `INSERT INTO votes (id,aid,value)
+    VALUES
+    (DEFAULT,?,?);`;
+    // console.log(value);
+    // console.log(id);
+    connection.query(insertQuery,[id,value],(error,results)=>{
+        if(error){
+            throw error
+        }
+        res.redirect("/");
+    });
+});
+
+app.get("/standings/:value", (req,res,next)=>{
+    const value = req.params.value;
+    res.json(value);
+    res.render("standings", {});
+})
+// make route /standings
+// that will show current votes for each side
+
+
+
 app.listen(8282);
