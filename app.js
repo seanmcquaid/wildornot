@@ -29,7 +29,11 @@ app.use(express.static("public"))
 
 app.get("/", (req,res,next)=>{
     // res.send("sanity check");
-    res.render("index", {});
+    const animalQuery = "SELECT * FROM animals;";
+    connection.query(animalQuery,(error,results)=>{
+        res.render("index", {animals: results});
+        console.log(results)
+    })
 })
 
 console.log("app is listening")
