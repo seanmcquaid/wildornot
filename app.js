@@ -27,6 +27,13 @@ app.set("view engine", "ejs");
 app.use(express.static("public"))
 
 
+// we need the body parser and urlencode middleware
+// so we can get data from post reequests
+const bodyParser = require("body-parser");
+app.use(bodyParser.json());
+
+app.use(bodyParser.urlencoded({extended: false}));
+
 app.get("/", (req,res,next)=>{
     // res.send("sanity check");
     const animalQuery = "SELECT * FROM animals;";
@@ -68,7 +75,7 @@ app.get("/standings", (req,res,next)=>{
     MAX(animals.species) as species FROM votes     
     INNER JOIN animals ON votes.aid = animals.id   
     GROUP BY animals.species
-    ORDER BY domesticCount desc;` 
+    ORDER BY domesticCount;` 
 
     // const giveMeAllTheDataAndJSWillFigureItOUT = `
     // SELECT * FROM votes
@@ -80,11 +87,17 @@ app.get("/standings", (req,res,next)=>{
         }
         res.render("standings",{results})
         console.log(results);
-    })
+    });
 });
 // make route /standings
 // that will show current votes for each side
 
+app.get("/register", (req,res,next)=>{
+    res.render("register", {});
+})
 
+app.post("/registerProcess", (req,res,next)=>{
+    res.json(req.body);
+})
 
 app.listen(8282);
