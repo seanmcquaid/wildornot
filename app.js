@@ -38,7 +38,7 @@ app.get("/", (req,res,next)=>{
         // grab a random one
         const rand = Math.floor(Math.random() * results.length);
         res.render("index", {animal: results[rand]});
-        // console.log(results)
+        console.log(results)
     })
 })
 
@@ -62,11 +62,19 @@ app.get("/vote/:value/:id", (req,res,next)=>{
     });
 });
 
-app.get("/standings/:value", (req,res,next)=>{
-    const value = req.params.value;
-    res.json(value);
-    res.render("standings", {});
-})
+app.get("/standings", (req,res,next)=>{
+    const countQuery = `SELECT value, COUNT(value) AS voteCount
+    FROM votes
+    GROUP BY value
+    HAVING votes.value = "domestic" OR votes.value = "wild";`;
+    connection.query(countQuery, (error,results)=>{
+        if(error){
+            throw error
+        }
+        res.render("standings",{value: results})
+        console.log(results);
+    })
+});
 // make route /standings
 // that will show current votes for each side
 

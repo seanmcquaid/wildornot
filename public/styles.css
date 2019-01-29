@@ -1,3 +1,8 @@
 img {
     height: 300px;
+    margin: 10px;
+}
+
+button {
+    margin: 10px;
 }
