@@ -4,6 +4,9 @@
 const express = require("express");
 // Make an express app
 let app = express();
+
+// bcrypt must be installed for security hashing
+const bcrypt = require("bcrypt-nodejs");
 // put our helmet on!
 const helmet = require("helmet");
 // app.use means, add some middleware
@@ -97,7 +100,24 @@ app.get("/register", (req,res,next)=>{
 })
 
 app.post("/registerProcess", (req,res,next)=>{
-    res.json(req.body);
-})
+    // res.json(req.body);
+    const hashedPass = bcrypt.hashSync(req.body.password);  
+    // const match = bcrypt.compareSync('x','$2a$10$/AIQo3.ojIKlv8hF2Zzo/uKuktqWO9skd8kun2YECFHl2WhnsZuW2');   
+    // const match2 = bcrypt.compareSync('x','$2a$10$us61i0sFyjFXDz2kwdnpyuxnfHvsB2t6l9GvJzHMKdhuYm0a3WQWG');
+    // res.json({match,match2});
+    res.json(hashedPass);
+    // before we insert a new user into the users table
+    // we need to make sure this email isnt already in the db
+    const checkUserQuery = `SELECT * FROM users WHERE email = ?;`;
+    connection.query(checkUserQuery,[req.body.email],(error,results)=>{
+        if(error){throw error;}
+        if(results.length != 0){
+            // our query returned a row, this means this email is already registered
+            res.redirect("/register?msg=register");
+        } else {
+
+        }
+    });
+});
 
 app.listen(8282);
