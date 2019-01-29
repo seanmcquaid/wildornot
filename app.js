@@ -105,7 +105,11 @@ app.get("/standings", (req,res,next)=>{
 // that will show current votes for each side
 
 app.get("/register", (req,res,next)=>{
-    res.render("register", {});
+    let msg;
+    if(req.query.msg == "register"){
+        msg = "this email is already registered";
+    }
+    res.render("register", {msg});
 })
 
 app.post("/registerProcess", (req,res,next)=>{
@@ -135,5 +139,39 @@ app.post("/registerProcess", (req,res,next)=>{
         }
     });
 });
+
+app.get("/login", (req,res,next)=>{
+    res.render("login", {});
+});
+
+app.post("/loginProcess", (req,res,next)=>{
+    // res.json(req.body);
+    const email = req.body.email;
+    // this is the english version of the password
+    // we need to get the hashed version from the db
+    const password = req.body.password;
+    const checkPasswordQuery = `SELECT * FROM users
+    WHERE email = ?`
+    connection.query(checkPasswordQuery,[email], (error,results)=>{
+        if(error){throw error}
+        // possibilities
+        // 1. no match - the user inst in the db
+        if(results.length == 0){
+            // we don't care waht password they gave us, send them back to login
+            res.redirect("/login?msg=NoUser")
+        }
+        else{
+            // user exists...
+            // 2. we found the user but password doesnt match
+            const passwordsMatch = bcrypt.compareSync(password,results[0].hash);
+            if(!passwordsMatch){
+                res.redirect("/login?msg=badPass");
+            } else {
+                // 3. we found the user and the password matches
+                res.redirect("/?msg=loginSuccess");
+            }
+        }
+    })
+})
 
 app.listen(8282);
