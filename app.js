@@ -5,17 +5,28 @@ const express = require("express");
 // Make an express app
 let app = express();
 
+const config = require("./config");
+
 // bcrypt must be installed for security hashing
 const bcrypt = require("bcrypt-nodejs");
+const expressSession = requrie("express-session");
 // put our helmet on!
 const helmet = require("helmet");
 // app.use means, add some middleware
 // middleware = any function that has access to req and res
 app.use(helmet());
 
+const sessionOptions = ({
+    secret: config.sessionSecret, 
+    resave: false,
+    saveUninitialized: true, 
+})
+    
+app.use(expressSession(sessionOptions));
+
+
 // set up mysql connection
 const mysql = require("mysql");
-const config = require("./config");
 let connection = mysql.createConnection(config.db);
 // we have a connection, lets connect
 connection.connect();
@@ -38,6 +49,13 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 
 app.get("/", (req,res,next)=>{
+    // check to see if the user is loggedin
+    // if not, goodbye
+    if(!req.session.loggedIn){
+        res.redirect("/login?msg=mustLogin");
+    }
+
+
     // res.send("sanity check");
     const animalQuery = "SELECT * FROM animals;";
     connection.query(animalQuery,(error,results)=>{
@@ -49,6 +67,8 @@ app.get("/", (req,res,next)=>{
         if(req.query.msg == "regSuccess"){
             msg = "You Have Successfully Registered";
             // console.log(msg);
+        } else if(req.query.msg == "loginSuccess"){
+            msfg = "You have successfully logged in";
         }
         // results is an array of all rows in animals
         // grab a random one
@@ -141,7 +161,13 @@ app.post("/registerProcess", (req,res,next)=>{
 });
 
 app.get("/login", (req,res,next)=>{
-    res.render("login", {});
+    let msg;
+    if(req.query.msg == "noUser"){
+        msg = "<h2 class='text-danger'>This email is not registered in our system, please try again or register!</h2>"
+    } else if(req.query.msg == "badPass"){
+        msg = "<h2 class='text-warning'>This password is not associated with this email, please try again!</h2>"
+    } 
+    res.render("login", {msg});
 });
 
 app.post("/loginProcess", (req,res,next)=>{
@@ -168,10 +194,26 @@ app.post("/loginProcess", (req,res,next)=>{
                 res.redirect("/login?msg=badPass");
             } else {
                 // 3. we found the user and the password matches
+                // note : every single http request( route) is a completely new request
+                // Cookies: stores data in the browser with a key on the Server
+                // Every single page request the entire cookie is sent to the server
+                // Sessions: stores data on the server with a key on the browser
+                req.session.name = results[0].name;
+                req.session.email = results[0].email;
+                req.session.id = results[0].id;
+                req.session.loggedIn = true;
                 res.redirect("/?msg=loginSuccess");
+                // response is sent, http disconnects
+                // we are done
             }
         }
     })
+});
+
+app.get("/logout", (req,res,next)=>{
+    // delete all session variables for this user
+    req.session.destroy();
+    res.redirect("/login?msg=loggedOut");
 })
 
 app.listen(8282);
