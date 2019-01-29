@@ -39,8 +39,8 @@ app.get("/", (req,res,next)=>{
         const rand = Math.floor(Math.random() * results.length);
         res.render("index", {animal: results[rand]});
         console.log(results)
-    })
-})
+    });
+});
 
 
 
@@ -63,15 +63,22 @@ app.get("/vote/:value/:id", (req,res,next)=>{
 });
 
 app.get("/standings", (req,res,next)=>{
-    const countQuery = `SELECT value, COUNT(value) AS voteCount
-    FROM votes
-    GROUP BY value
-    HAVING votes.value = "domestic" OR votes.value = "wild";`;
-    connection.query(countQuery, (error,results)=>{
+    // this is a specific query to only get the data that you want to JS
+    const selectQuery = `SELECT SUM(IF(value='domestic',1,-1)) AS domesticCount, 
+    MAX(animals.species) as species FROM votes     
+    INNER JOIN animals ON votes.aid = animals.id   
+    GROUP BY animals.species
+    ORDER BY domesticCount desc;` 
+
+    // const giveMeAllTheDataAndJSWillFigureItOUT = `
+    // SELECT * FROM votes
+    // INNER JOIN animals ON votes.aid = animals.id;`;
+
+    connection.query(selectQuery, (error,results)=>{
         if(error){
             throw error
         }
-        res.render("standings",{value: results})
+        res.render("standings",{results})
         console.log(results);
     })
 });

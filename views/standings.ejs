@@ -5,22 +5,20 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Page Title</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <% include header%>
+    <% include header %>
+    <% include navbar %>
 </head>
 <body>
     <div class="container">
-        <div class="text-center row">
-            <h1>Standings</h1>
-            <% value.forEach((voteName)=>{ %>
-            <div class="col-sm-6">
-                <div class="<%= voteName.value %>Count"><%= voteName.value %></div>
-                <div class="voteCount"><%=voteName.voteCount %></div>
-            </div>
-            <% });%>
-            <div class="row">
-                <a href="/">
-                    <button class="btn btn-danger">HOME</button>
-                </a>
+        <div class="row">
+            <div class="col-sm-6 col-sm-offset-3">
+                <h2>How Domestic is Each Animal???</h2>
+                <% results.forEach((animal)=>{ %>
+                    <div class="species-name">
+                        <%= animal.species %>
+                        <%= animal.domesticCount %>
+                    </div>
+                <% }) %>
             </div>
         </div>
     </div>
