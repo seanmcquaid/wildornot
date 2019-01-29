@@ -44,10 +44,19 @@ app.get("/", (req,res,next)=>{
         if(error){
             throw error
         }
+        // see if there is anything in the query string for msg
+        let msg;
+        if(req.query.msg == "regSuccess"){
+            msg = "You Have Successfully Registered";
+            // console.log(msg);
+        }
         // results is an array of all rows in animals
         // grab a random one
         const rand = Math.floor(Math.random() * results.length);
-        res.render("index", {animal: results[rand]});
+        res.render("index", {
+            animal: results[rand],
+            msg
+        });
         console.log(results)
     });
 });
@@ -89,7 +98,7 @@ app.get("/standings", (req,res,next)=>{
             throw error
         }
         res.render("standings",{results})
-        console.log(results);
+        // console.log(results);
     });
 });
 // make route /standings
@@ -105,7 +114,7 @@ app.post("/registerProcess", (req,res,next)=>{
     // const match = bcrypt.compareSync('x','$2a$10$/AIQo3.ojIKlv8hF2Zzo/uKuktqWO9skd8kun2YECFHl2WhnsZuW2');   
     // const match2 = bcrypt.compareSync('x','$2a$10$us61i0sFyjFXDz2kwdnpyuxnfHvsB2t6l9GvJzHMKdhuYm0a3WQWG');
     // res.json({match,match2});
-    res.json(hashedPass);
+    // res.json(hashedPass);
     // before we insert a new user into the users table
     // we need to make sure this email isnt already in the db
     const checkUserQuery = `SELECT * FROM users WHERE email = ?;`;
@@ -115,7 +124,14 @@ app.post("/registerProcess", (req,res,next)=>{
             // our query returned a row, this means this email is already registered
             res.redirect("/register?msg=register");
         } else {
-
+            // this is a new user! Insert them
+            const insertUserQuery = `INSERT INTO users (name,email, hash)
+            VALUES
+            (?,?,?);`;
+            connection.query(insertUserQuery,[req.body.name, req.body.email, hashedPass],(error2,results2)=>{
+                if(error2){throw error2}
+                res.redirect("/?msg=regSuccess");
+            })
         }
     });
 });
