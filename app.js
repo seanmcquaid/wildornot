@@ -1,5 +1,8 @@
 // Dum,Dum,Dum... no generator!!
 // First, well, this is an Express app. Maybe we should
+
+const fs = require("fs");
+
 // get... Express
 const express = require('express');
 // Make an express app
@@ -12,6 +15,9 @@ const config = require('./config');
 // app.use means, add some middleware!
 // middelware = any function that has access to req and res
 app.use(helmet());
+
+const multer = require("multer");
+const upload = multer({dest: "public/"});
 
 const sessionOptions = {
   secret: config.sessionSecret,
@@ -242,7 +248,29 @@ app.get('/logout',(req, res, next)=>{
     // delete all session varibles for this user
     req.session.destroy();
     res.redirect('/login?msg=loggedOut')
-})
+});
+
+app.get("/uploadAnimal", (req,res,next)=>{
+    res.render("upload", {});
+});
+
+
+app.post("/formSubmit", upload.single("imageToUpload"), (req,res,next)=>{
+    // get the animal name from req.body .... ?
+    // get the image from ... ?
+    // res.json(req.file);
+
+    // the file is here in req.file but it's in binary
+    //  1. get the temp path
+    //  2. set up the new target path where we actually want it 
+    // (i.e. original name might useful here)
+    // 3. we can't read binary but FS can, have fs read that
+    // 4. once binary is read, write it to target
+    // 5. insert the name of the file into the db
+    // 6. send them back to /
+
+
+});
 
 console.log("App is listening on port 8902");
 app.listen(8902);
